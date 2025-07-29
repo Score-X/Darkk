@@ -29,7 +29,7 @@ RUN wget -O ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux
     chmod +x /usr/local/bin/ngrok
 
 # Default env for Ngrok token (you can override)
-ENV NGROK_AUTHTOKEN="PASTE_YOUR_TOKEN_HERE"
+ENV NGROK_AUTHTOKEN="2qiXwqE9lFYqe9NvvpTGZTj7F5h_2Wquuw8qRBApdFBQox56J"
 
 # Expose GUI + SSH
 EXPOSE 22 5901 6080
