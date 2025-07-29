@@ -2,18 +2,19 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
+# Install system dependencies
 RUN apt update && \
-    apt install -y unzip openssh-server curl wget sudo netcat && \
+    apt install -y unzip openssh-server curl wget sudo && \
     mkdir /var/run/sshd
 
 # Set root password
 RUN echo 'root:Score-x' | chpasswd
 
-# Configure SSH
+# Enable root SSH login and password auth
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
     sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
-    echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
+    echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config && \
+    echo 'ForceCommand /bin/bash' >> /etc/ssh/sshd_config
 
 # Install ngrok
 RUN wget -O ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip && \
@@ -22,19 +23,17 @@ RUN wget -O ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux
     chmod +x /usr/local/bin/ngrok && \
     rm ngrok.zip
 
-# Set your ngrok authtoken
+# Set ngrok authtoken
 RUN ngrok config add-authtoken 2xWnfOyRd1Zi5KaeMnvqsIziHLW_6PYhXB2qC9AKg6grTubJJ
 
-# Expose SSH and fake HTTP port
-EXPOSE 22 8080
+# Expose SSH port
+EXPOSE 22
 
-# Start everything
+# Keep container alive and serve SSH tunnel
 CMD bash -c "\
   service ssh start && \
   ngrok tcp 22 --region ap > /dev/null & \
   sleep 8 && \
-  echo '=========================================' && \
-  echo '🔐 Connect using:' && \
+  echo '🔐 SSH address:' && \
   curl -s http://127.0.0.1:4040/api/tunnels | grep -o 'tcp://[^\\\"]*' && \
-  echo '=========================================' && \
-  while true; do echo 'OK' | nc -l -p 8080; done"
+  tail -f /dev/null"
