@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
 RUN apt update && \
-    apt install -y unzip openssh-server curl wget sudo && \
+    apt install -y unzip openssh-server curl wget sudo netcat && \
     mkdir /var/run/sshd
 
 # Set root password
@@ -25,14 +25,14 @@ RUN wget -O ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux
 # Set your ngrok authtoken
 RUN ngrok config add-authtoken 2xWnfOyRd1Zi5KaeMnvqsIziHLW_6PYhXB2qC9AKg6grTubJJ
 
-# Expose SSH port
-EXPOSE 22
+# Expose Render-detectable port
+EXPOSE 8080
 
-# Start SSH and ngrok, and keep container alive
+# Start SSH, Ngrok, dummy HTTP server, and keep alive
 CMD bash -c "\
   service ssh start && \
   ngrok tcp 22 --region ap > /dev/null & \
-  sleep 8 && \
+  sleep 10 && \
   echo '🔐 SSH address:' && \
   curl -s http://127.0.0.1:4040/api/tunnels | grep -o 'tcp://[^\\\"]*' && \
-  tail -f /dev/null"
+  while true; do echo -e 'HTTP/1.1 200 OK\n\nRender alive' | nc -l -p 8080; done"
